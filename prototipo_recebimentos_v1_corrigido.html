@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recebimentos - Protótipo V1</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+.app{max-width:480px;margin:auto;min-height:100vh;background:white;box-shadow:0 0 25px #0001}
+header{background:#123b63;color:white;padding:18px 20px}
+header small{opacity:.8} header h2{margin:5px 0 0}
+main{padding:20px}.screen{display:none}.screen.active{display:block}
+.card{background:white;border:1px solid #dce3eb;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 3px 12px #00000008}
+.info{background:#eef5fb;border-radius:12px;padding:12px;margin-bottom:18px}
+label{font-size:13px;font-weight:bold;color:#526173;display:block;margin:12px 0 6px}
+input,select{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px}
+button{border:0;border-radius:12px;padding:14px 18px;font-size:16px;font-weight:bold;cursor:pointer}
+.primary{background:#123b63;color:white;width:100%;margin-top:12px}
+.secondary{background:#e9eef4;color:#17324d;width:100%;margin-top:10px}
+.mic{width:120px;height:120px;border-radius:50%;background:#123b63;color:white;font-size:48px;display:block;margin:25px auto 12px}
+.center{text-align:center}.muted{color:#66758a;font-size:14px}.amount{font-size:32px;font-weight:bold;margin:8px 0 18px}
+.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf0f4}
+.ok{font-size:48px;text-align:center}.receipt{border:2px dashed #b8c3cf;padding:18px;border-radius:12px}
+.nav{display:flex;gap:8px;margin-top:15px}.nav button{flex:1}
+.badge{display:inline-block;background:#dcecff;color:#123b63;border-radius:20px;padding:5px 9px;font-size:12px}
+h3{margin-top:5px}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <small>ASSEMBLEIA DE DEUS MISSÕES</small>
+  <h2>Recebimentos — V1</h2>
+</header>
+
+<main>
+<section id="login" class="screen active">
+  <h3>Identificação do usuário</h3>
+  <p class="muted">No sistema real, setor e congregação serão vinculados automaticamente ao usuário.</p>
+  <label>Usuário</label>
+  <input id="usuario" value="Maria — Tesoureira">
+  <label>Setor</label>
+  <select id="setor"></select>
+  <label>Congregação</label>
+  <select id="congregacao"></select>
+  <button class="primary" onclick="entrar()">Entrar no recebimento</button>
+</section>
+
+<section id="novo" class="screen">
+  <div class="info">
+    <b id="local"></b><br><span class="muted" id="operador"></span>
+  </div>
+  <div class="center">
+    <h3>Novo recebimento</h3>
+    <p class="muted">Toque no microfone e fale, por exemplo:</p>
+    <b>"João da Silva, dízimo, quinhentos reais"</b>
+    <button class="mic" onclick="simularVoz()">🎙️</button>
+    <p id="statusVoz" class="muted">Pronto para ouvir</p>
+  </div>
+  <div class="nav">
+    <button class="secondary" onclick="abrirManual()">Digitar manualmente</button>
+    <button class="secondary" onclick="fecharCulto()">Fechar culto</button>
+  </div>
+</section>
+
+<section id="manual" class="screen">
+  <h3>Novo recebimento</h3>
+  <label>Nome</label><input id="nome" placeholder="Nome da pessoa">
+  <label>Tipo</label>
+  <select id="tipo"><option>Dízimo</option><option>Oferta</option><option>Missões</option><option>Oferta especial</option><option>Outros</option></select>
+  <label>Valor (R$)</label><input id="valor" type="number" step="0.01" placeholder="0,00">
+  <button class="primary" onclick="preConfirmar()">Continuar</button>
+  <button class="secondary" onclick="show('novo')">Voltar</button>
+</section>
+
+<section id="confirmar" class="screen">
+  <h3>Confirme o recebimento</h3>
+  <div class="card">
+    <div class="row"><span>Pessoa</span><b id="cNome"></b></div>
+    <div class="row"><span>Tipo</span><b id="cTipo"></b></div>
+    <div class="row"><span>Setor</span><b id="cSetor"></b></div>
+    <div class="row"><span>Congregação</span><b id="cCong"></b></div>
+    <div class="center"><div class="amount" id="cValor"></div></div>
+  </div>
+  <button class="primary" onclick="registrar()">✓ Confirmar e registrar</button>
+  <button class="secondary" onclick="show('novo')">Cancelar</button>
+</section>
+
+<section id="recibo" class="screen">
+  <div class="ok">✓</div>
+  <div class="center"><h3>Recebimento registrado</h3><span class="badge" id="numero"></span></div>
+  <div class="receipt">
+    <div class="center"><b>ASSEMBLEIA DE DEUS MISSÕES</b><br>RECIBO DE CONTRIBUIÇÃO</div>
+    <hr>
+    <div class="row"><span>Recebemos de</span><b id="rNome"></b></div>
+    <div class="row"><span>Referente a</span><b id="rTipo"></b></div>
+    <div class="row"><span>Valor</span><b id="rValor"></b></div>
+    <div class="row"><span>Setor</span><b id="rSetor"></b></div>
+    <div class="row"><span>Congregação</span><b id="rCong"></b></div>
+    <div class="row"><span>Data/Hora</span><b id="rData"></b></div>
+    <p class="center muted">Agradecemos sua contribuição.</p>
+  </div>
+  <button class="primary" onclick="whatsapp()">📱 Preparar envio pelo WhatsApp</button>
+  <button class="secondary" onclick="show('novo')">+ Novo recebimento</button>
+</section>
+
+<section id="fechamento" class="screen">
+  <h3>Fechamento do culto</h3>
+  <div class="card">
+    <div class="row"><span>Recebimentos</span><b id="fQtd">0</b></div>
+    <div class="row"><span>Dízimos</span><b id="fDizimo">R$ 0,00</b></div>
+    <div class="row"><span>Ofertas</span><b id="fOferta">R$ 0,00</b></div>
+    <div class="row"><span>Missões</span><b id="fMissoes">R$ 0,00</b></div>
+    <div class="row"><span>Total</span><b id="fTotal">R$ 0,00</b></div>
+  </div>
+  <button class="primary" onclick="alert('No sistema real, o fechamento será enviado para o responsável do setor e para a Sede.')">✓ Confirmar fechamento</button>
+  <button class="secondary" onclick="show('novo')">Voltar</button>
+</section>
+</main>
+</div>
+
+<script>
+const setores = Array.from({length:20},(_,i)=>String(i+1).padStart(2,'0'));
+const congregacoes = Array.from({length:120},(_,i)=>String(i+1).padStart(3,'0'));
+let dados={setor:'08',congregacao:'037',usuario:'Maria — Tesoureira'};
+let registros=[];
+let atual={};
+
+const setorEl=document.getElementById('setor');
+setores.forEach(s=>setorEl.add(new Option('Setor '+s,s)));
+setorEl.value='08';
+const congEl=document.getElementById('congregacao');
+congregacoes.forEach(c=>congEl.add(new Option('Congregação '+c,c)));
+congEl.value='037';
+
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function entrar(){
+ dados.usuario=document.getElementById('usuario').value||'Tesoureiro';
+ dados.setor=setorEl.value; dados.congregacao=congEl.value;
+ document.getElementById('local').textContent=`Setor ${dados.setor} • Congregação ${dados.congregacao}`;
+ document.getElementById('operador').textContent=dados.usuario;
+ show('novo');
+}
+function simularVoz(){
+ document.getElementById('statusVoz').textContent='Ouvindo...';
+ setTimeout(()=>{
+   document.getElementById('statusVoz').textContent='Voz interpretada com sucesso';
+   atual={nome:'João da Silva',tipo:'Dízimo',valor:500};
+   preConfirmar();
+ },700);
+}
+function abrirManual(){show('manual')}
+function preConfirmar(){
+ let nome=document.getElementById('nome').value;
+ let tipo=document.getElementById('tipo').value;
+ let valor=parseFloat(document.getElementById('valor').value);
+ if(!atual.nome){if(!nome||!valor){alert('Informe nome e valor.');return} atual={nome,tipo,valor}}
+ document.getElementById('cNome').textContent=atual.nome;
+ document.getElementById('cTipo').textContent=atual.tipo;
+ document.getElementById('cValor').textContent=atual.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('cSetor').textContent=dados.setor;
+ document.getElementById('cCong').textContent=dados.congregacao;
+ show('confirmar');
+}
+function registrar(){
+ const agora=new Date();
+ atual.setor=dados.setor; atual.congregacao=dados.congregacao; atual.usuario=dados.usuario; atual.data=agora;
+ registros.push({...atual});
+ const n=String(3785+registros.length).padStart(8,'0');
+ document.getElementById('numero').textContent='Recibo nº '+n;
+ document.getElementById('rNome').textContent=atual.nome;
+ document.getElementById('rTipo').textContent=atual.tipo;
+ document.getElementById('rValor').textContent=atual.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('rSetor').textContent=atual.setor;
+ document.getElementById('rCong').textContent=atual.congregacao;
+ document.getElementById('rData').textContent=agora.toLocaleString('pt-BR');
+ atualizarFechamento();
+ show('recibo');
+}
+function atualizarFechamento(){
+ let soma=t=>registros.filter(r=>r.tipo===t).reduce((a,r)=>a+r.valor,0);
+ let total=registros.reduce((a,r)=>a+r.valor,0);
+ document.getElementById('fQtd').textContent=registros.length;
+ document.getElementById('fDizimo').textContent=soma('Dízimo').toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('fOferta').textContent=soma('Oferta').toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('fMissoes').textContent=soma('Missões').toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ document.getElementById('fTotal').textContent=total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+function fecharCulto(){atual={};atualizarFechamento();show('fechamento')}
+function whatsapp(){
+ const texto=`Recibo de contribuição — ${atual.tipo} — ${atual.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}. Congregação ${atual.congregacao}. Agradecemos sua contribuição.`;
+ alert('Na V1 real, aqui entraremos na integração oficial de WhatsApp.\\n\\nMensagem preparada:\\n'+texto);
+}
+</script>
+</body>
+</html>
